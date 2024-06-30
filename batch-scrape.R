@@ -41,7 +41,7 @@ grab_wods <- function(hds) {
 wods_2024 <- grab_wods(hac_date_strings)
 names(wods_2024) <- dates
 wods_2024 <- wods_2024[!is.na(wods_2024)]
-wods <- wods_2024 |> list_rbind(names_to = "Date")
-write_rds(wods, "2024-hcf-wods.rds")
+wods <- wods_2024 |> list_rbind(names_to = "Date") |> mutate(Date = ymd(Date))
+write_rds(wods, "hcf-wods.rds")
 
 

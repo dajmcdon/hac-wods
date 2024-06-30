@@ -1,0 +1,28 @@
+---
+title: "Scrollable WODs"
+author: "DJM"
+date: today
+format: html
+---
+
+```{r, echo=FALSE, message=FALSE}
+library(DT)
+library(dplyr)
+library(stringr)
+wods <- readRDS("hcf-wods.rds") |>
+  rename(WOD = page) |>
+  mutate(WOD = str_replace_all(WOD, "\n", "<br>"), 
+         WOD = str_remove(WOD, "^CrossFit<br><br>Main:<br><br>"),
+         WOD = str_remove(WOD, "^CrossFit<br><br>Main<br><br>"),
+         WOD = str_remove(WOD, "^CrossFit<br><br>"),)
+datatable(wods,
+  options = list(
+    scrollY = "700px", paging = FALSE, width = "1000px",
+    columnDefs = list(
+      list(width="150px", targets = 0),
+      list(width="750px", targets = 1))
+  ),
+  rownames = NULL, escape = FALSE
+) |>
+  formatDate("Date")
+```
