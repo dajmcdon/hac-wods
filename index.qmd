@@ -90,16 +90,13 @@ wods |>
   ) |>
   arrange(desc(Date)) |>
   datatable(
-    extensions = c("RowGroup", "Scroller"),
+    extensions = "RowGroup",
     rownames = NULL,
     escape = FALSE,
     options = list(
       rowGroup = list(dataSrc = 2),
       scrollY = "700px",
-      deferRender = TRUE,
       scrollY = 30,
-      scroller = TRUE,
-      paging = TRUE,
       columnDefs = list(
         list(visible = FALSE, targets = 2),
         list(width = "150px", targets = 0),
