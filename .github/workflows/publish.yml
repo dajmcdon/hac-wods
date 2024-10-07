@@ -3,7 +3,7 @@ on:
   push:
     branches: main
   schedule:
-    - cron: "55 0,23 * * *"
+    - cron: "0 12 * * SUN" # runs at noon UTC on Sunday
 
 name: Quarto Publish
 
