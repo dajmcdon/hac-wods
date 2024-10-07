@@ -1,5 +1,5 @@
 ---
-title: "Scrollable WODs"
+title: "CrossFit Workouts"
 author: "DJM"
 date: today
 format: html
@@ -12,6 +12,10 @@ library(DT)
 library(dplyr)
 library(stringr)
 library(lubridate)
+library(rvest)
+library(tibble)
+library(purrr)
+
 wods <- readRDS("hcf-wods.rds")
 ```
 
@@ -24,11 +28,24 @@ dates_to_grab <- seq(from = last_date + 1, to = today(), by = 1L)
 dofw <- wday(dates_to_grab)
 dates <- dates_to_grab[dofw %in% 2:6] # remove Saturday/Sunday
 
-if (length(dates) > 0L) {
-  library(rvest)
-  library(tibble)
-  library(purrr)
+grab_wods <- function(hds) {
+  wods <- list()
+  for (d in seq_along(hds)) {
+    page <- tryCatch(
+      read_html(paste0(baseurl, hds[d])) |>
+        html_elements("div.entry-content") |>
+        html_text2() |>
+        str_trim(),
+      error = function(e) NA,
+      finally = NA
+    )
+    wods[[d]] <- tibble(page = page)
+    Sys.sleep(1)
+  }
+  wods
+}
 
+if (length(dates) > 0L) {
   hac_date_strings <- tolower(paste(
     wday(dates, label = TRUE, abbr = FALSE),
     month(dates, label = TRUE, abbr = FALSE),
@@ -38,23 +55,7 @@ if (length(dates) > 0L) {
   ))
 
   baseurl <- "https://hoosierathleticclub.com/"
-  grab_wods <- function(hds) {
-    wods <- list()
-    for (d in seq_along(hds)) {
-      page <- tryCatch(
-        read_html(paste0(baseurl, hds[d])) |>
-          html_elements("div.entry-content") |>
-          html_text2() |>
-          str_trim(),
-        error = function(e) NA,
-        finally = NA
-      )
-      wods[[d]] <- tibble(page = page)
-      Sys.sleep(1)
-    }
-    wods
-  }
-
+  
   new_wods <- grab_wods(hac_date_strings)
   names(new_wods) <- dates
   new_wods <- new_wods[!is.na(new_wods)]
@@ -74,20 +75,31 @@ wods |>
   rename(WOD = page) |>
   mutate(
     WOD = str_replace_all(WOD, "\n", "<br>"),
-    WOD = str_remove(WOD, "^CrossFit<br><br>Main:<br><br>"),
-    WOD = str_remove(WOD, "^CrossFit<br><br>Main<br><br>"),
     WOD = str_remove(WOD, "^CrossFit<br><br>"),
+    WOD = str_remove(WOD, "^CrossFit:<br><br>"),
+    WOD = str_remove(WOD, "^CrossFit<br><br>"),
+    WOD = str_remove(WOD, "^Main:"),
+    WOD = str_remove(WOD, "^Main"),
+    WOD = str_remove(WOD, "^CrossFit:"),
+    WOD = str_remove(WOD, "(<br>)+$"),
+    WOD = str_remove(WOD, "^(<br>)+"),
+    WOD = str_trim(WOD),
+    WOD = str_remove(WOD, "(<br>)+$"),
+    WOD = str_remove(WOD, "^(<br>)+"),
     yearwk = paste0(year(Date), " W", week(Date))
   ) |>
   arrange(desc(Date)) |>
   datatable(
-    extensions = "RowGroup",
+    extensions = c("RowGroup", "Scroller"),
     rownames = NULL,
     escape = FALSE,
     options = list(
       rowGroup = list(dataSrc = 2),
       scrollY = "700px",
-      paging = FALSE,
+      deferRender = TRUE,
+      scrollY = 30,
+      scroller = TRUE,
+      paging = TRUE,
       columnDefs = list(
         list(visible = FALSE, targets = 2),
         list(width = "150px", targets = 0),
