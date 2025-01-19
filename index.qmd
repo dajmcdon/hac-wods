@@ -86,7 +86,7 @@ wods |>
     WOD = str_trim(WOD),
     WOD = str_remove(WOD, "(<br>)+$"),
     WOD = str_remove(WOD, "^(<br>)+"),
-    yearwk = paste0(year(Date), " W", week(Date))
+    yearwk = paste0(year(Date), " W", isoweek(Date))
   ) |>
   arrange(desc(Date)) |>
   datatable(
